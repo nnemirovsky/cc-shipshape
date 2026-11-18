@@ -1,6 +1,6 @@
 {
   "name": "shipshape",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Keeps GitHub work in good order: sets up and audits repos to a baseline, writes PRs, runs the review cycle round by round, keeps human-facing writing plain, tidies the notification inbox",
   "owner": {
     "name": "nnemirovsky"

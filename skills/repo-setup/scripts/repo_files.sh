@@ -84,8 +84,11 @@ if [ "$public" = 1 ]; then
   fi
   case "$KIND" in plugin|mcp) tpl PRIVACY.md PRIVACY.md;; esac
   tpl .github/CODEOWNERS .github/CODEOWNERS
-  tpl .github/ISSUE_TEMPLATE/bug_report.yml .github/ISSUE_TEMPLATE/bug_report.yml
-  tpl .github/ISSUE_TEMPLATE/feature_request.yml .github/ISSUE_TEMPLATE/feature_request.yml
+  # A repo's own bug or feature template wins: never add a second one.
+  if ls .github/ISSUE_TEMPLATE/bug* >/dev/null 2>&1; then echo "EXISTS  .github/ISSUE_TEMPLATE/bug report"
+  else tpl .github/ISSUE_TEMPLATE/bug_report.yml .github/ISSUE_TEMPLATE/bug_report.yml; fi
+  if ls .github/ISSUE_TEMPLATE/feature* >/dev/null 2>&1; then echo "EXISTS  .github/ISSUE_TEMPLATE/feature request"
+  else tpl .github/ISSUE_TEMPLATE/feature_request.yml .github/ISSUE_TEMPLATE/feature_request.yml; fi
   tpl .github/ISSUE_TEMPLATE/config.yml .github/ISSUE_TEMPLATE/config.yml
   [ -e .github/pull_request_template.md ] && echo "EXISTS  .github/pull_request_template.md" \
     || tpl .github/PULL_REQUEST_TEMPLATE.md .github/PULL_REQUEST_TEMPLATE.md
@@ -107,6 +110,9 @@ else
     [ -f package.json ] && eco npm /
     [ -f Cargo.toml ] && eco cargo /
     { [ -f Dockerfile ] || ls Dockerfile.* >/dev/null 2>&1; } && eco docker /
+    for c in compose.yml compose.yaml docker-compose.yml docker-compose.yaml; do
+      [ -f "$c" ] && { eco docker-compose /; break; }
+    done
   } | put .github/dependabot.yml
 fi
 

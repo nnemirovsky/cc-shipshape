@@ -33,6 +33,10 @@ jobs:
             [ -f "$f" ] && check "$f" "$(jq -r '.version // empty' "$f")"
           done
           [ -f pyproject.toml ] && check pyproject.toml "$(grep -m1 -oE '^version *= *"[^"]+"' pyproject.toml | cut -d'"' -f2)"
+          # a dynamic version lives in the package as __version__
+          for f in $(git ls-files '*/_version.py' '*/__init__.py'); do
+            check "$f" "$(grep -m1 -oE '^__version__ *= *"[^"]+"' "$f" | cut -d'"' -f2)"
+          done
           exit "$fail"
 
       # gh ships on the runner, so no third-party action is needed. A release
