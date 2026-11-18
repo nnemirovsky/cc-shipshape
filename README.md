@@ -1,6 +1,6 @@
 # Shipshape
 
-Skills for getting a GitHub pull request from draft to merged without babysitting it, and for keeping the text you send to other people plain and human.
+Skills for keeping GitHub work in good order: repositories set up to a sound baseline, pull requests taken from draft to merged without babysitting, and the text you send to other people kept plain and human.
 
 ## Skills
 
@@ -10,6 +10,7 @@ Skills for getting a GitHub pull request from draft to merged without babysittin
 | `handle-pr` | Watches the PR through its review cycle and drives it to clean. It reacts to every review, inline comment, CI result and state change: verifies each finding, fixes the valid ones in a subagent, re-reviews the fixes, pushes, resolves threads, dismisses an addressed `CHANGES_REQUESTED`, and re-requests review on green CI. It tidies superseded bot reports at the end. |
 | `writing-rules` | Style rules for text that leaves Claude Code for another human: PR text, review replies, commit messages, chat posts, emails. Plain ASCII, no filler, no AI voice. |
 | `gh-notif-cleanup` | Clears stale GitHub notifications: merged and closed PRs and failed CI runs. Open work is kept. |
+| `repo-setup` | Sets up a new repository, or audits and fixes an existing one, to a vetted baseline per kind (Claude Code plugin, MCP server, library, private repo). It covers squash-only merges, rulesets protecting main and release tags, secret scanning, private vulnerability reporting, Dependabot, CodeQL and immutable releases, plus the community files and CI and release workflows. Scripts show a diff before they change anything. |
 
 ## handle-pr in more detail
 

@@ -1,0 +1,36 @@
+name: tests
+
+on:
+  push:
+    branches: [{{DEFAULT_BRANCH}}]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugin:
+    # The job name is the required status check in the "Protect main" ruleset.
+    # Rename both together, or PRs wait forever for a check that never reports.
+    name: validate and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: validate the manifest
+        run: claude plugin validate .
+
+      - name: run the plugin tests
+        run: claude plugin test .
