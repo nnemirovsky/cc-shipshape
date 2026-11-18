@@ -8,7 +8,7 @@ Its scripts call the GitHub API through your own `gh` login: pull requests, revi
 
 ## What it writes
 
-State files in `/tmp`: one per pull request a review cycle is running for (`/tmp/handle-pr-<num>.json`), and the PR watch's snapshot and pid file (`/tmp/watch_pr-<owner>-<repo>-<num>.json`). Its hook reads those files on every prompt and adds a line about the current repository's runs to the conversation.
+State files in `~/.local/state/shipshape/` (or `$XDG_STATE_HOME/shipshape/`), a directory only you can read: one per pull request a review cycle is running for (`handle-pr-<owner>-<repo>-<num>.json`), and the PR watch's snapshot and pid file (`watch_pr-<owner>-<repo>-<num>.json`). Its hook reads those files on every prompt and adds a line about the current repository's runs to the conversation. Files that older versions left in `/tmp` are read only when you own them.
 
 ## Contact
 

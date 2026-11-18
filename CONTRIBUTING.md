@@ -30,7 +30,7 @@ skills/handle-pr/scripts/cleanup_pr.sh <pr> --repo <owner/repo>
 
 `cleanup_pr.sh` only prints its plan until you pass `--apply`. `audit` and `--dry-run` change nothing.
 
-The hook reads `/tmp/handle-pr-*.json`. Run it by hand from a checkout to see what it would add to a prompt:
+The hook reads `~/.local/state/shipshape/handle-pr-*.json` (and, from older versions, `/tmp/handle-pr-*.json` files you own). Run it by hand from a checkout to see what it would add to a prompt:
 
 ```
 bash hooks/run-state.sh

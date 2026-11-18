@@ -32,5 +32,17 @@ jobs:
       - name: validate the manifest
         run: claude plugin validate .
 
+      # `claude plugin test` runs a hooks module's tests. A plugin without one
+      # (skills, commands, bash hooks only) has nothing for it to run.
       - name: run the plugin tests
-        run: claude plugin test .
+        run: |
+          if out=$(claude plugin test . 2>&1); then echo "$out"
+          elif grep -q 'no hooks module to load' <<<"$out"; then echo "no hooks module: nothing for claude plugin test to run"
+          else echo "$out"; exit 1; fi
+
+      - name: check the shell scripts
+        run: |
+          files=$(git ls-files '*.sh')
+          [ -n "$files" ] || { echo "no shell scripts"; exit 0; }
+          printf '%s\n' "$files" | xargs -n1 bash -n
+          printf '%s\n' "$files" | xargs shellcheck --severity=error

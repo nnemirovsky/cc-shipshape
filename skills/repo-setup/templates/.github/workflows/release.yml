@@ -28,7 +28,8 @@ jobs:
               echo "tag $GITHUB_REF_NAME does not match $1 version $2" >&2; fail=1
             fi
           }
-          for f in .claude-plugin/plugin.json plugin/.claude-plugin/plugin.json package.json; do
+          # every plugin manifest in the repo, at any depth, and package.json
+          for f in $(git ls-files '.claude-plugin/plugin.json' '*/.claude-plugin/plugin.json') package.json; do
             [ -f "$f" ] && check "$f" "$(jq -r '.version // empty' "$f")"
           done
           [ -f pyproject.toml ] && check pyproject.toml "$(grep -m1 -oE '^version *= *"[^"]+"' pyproject.toml | cut -d'"' -f2)"

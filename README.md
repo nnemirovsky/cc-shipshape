@@ -20,7 +20,7 @@ The main conversation stays a pure orchestrator. Each review round is triaged, f
 - **Nothing is disputed without you.** A finding that will not be fixed goes to you, with the evidence, before anything is posted.
 - **Re-review only on green CI, first attempt.** A reviewer is never pulled back to a PR whose checks are pending, red, or green only on a re-run.
 - **Push before touching threads**, and never resolve a thread silently unless its finding was fixed in full.
-- **A state file in `/tmp`** keeps the round, the gates and the next step. A hook brings them back on every prompt, so a long run does not drift.
+- **A state file in `~/.local/state/shipshape/`** keeps the round, the gates and the next step. A hook brings them back on every prompt, so a long run does not drift.
 
 The watch is `watch_pr.sh`. It polls the PR every 60 seconds and prints one line per change: new reviews, inline comments, issue comments, checks, and state or draft or review-decision changes. It keeps a snapshot, so a restart prints only what changed in between. It exits when the PR is merged or closed.
 

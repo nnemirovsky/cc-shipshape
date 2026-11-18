@@ -11,11 +11,18 @@
 set -u
 shopt -s nullglob
 
-files=(/tmp/handle-pr-*.json)
+# State lives in $HANDLE_PR_STATE_DIR, by default ~/.local/state/shipshape
+# (mode 700). Older versions wrote /tmp, so files there still count, but only
+# the ones this user owns: on a shared machine anyone can create files in /tmp,
+# and this hook puts their text into the conversation.
+STATE_DIR="${HANDLE_PR_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/shipshape}"
+files=()
+for f in "$STATE_DIR"/handle-pr-*.json /tmp/handle-pr-*.json; do
+  [ -f "$f" ] && [ -O "$f" ] && files+=("$f")
+done
 [ ${#files[@]} -eq 0 ] && exit 0
 
-# The state files live in /tmp and are visible from every project, so a run is
-# scoped to its repo. A worktree lives under its repo, so trimming the worktree
+# The state files are shared by every project, so a run is scoped to its repo. A worktree lives under its repo, so trimming the worktree
 # suffix maps both to one root: a run stays visible from the main checkout and
 # from any of its worktrees.
 dir="${CLAUDE_PROJECT_DIR:-$PWD}"
@@ -55,10 +62,11 @@ for f in "${files[@]}"; do
   [ -z "$line" ] && continue
 
   # The run only moves while its PR watch is alive. watch_pr.sh records itself
-  # in /tmp/watch_pr-<owner>-<repo>-<pr>.json.pid, and the pid counts only while
-  # it is still a watch_pr.sh process.
+  # in <state dir>/watch_pr-<owner>-<repo>-<pr>.json.pid (older versions in
+  # /tmp), and the pid counts only while it is still a watch_pr.sh process.
   slug=$(jq -r '"\(.repo // "")|\(.pr // "")" | gsub("/"; "-")' "$f" 2>/dev/null)
-  pidf="/tmp/watch_pr-${slug%%|*}-${slug##*|}.json.pid"
+  pidf="$STATE_DIR/watch_pr-${slug%%|*}-${slug##*|}.json.pid"
+  [ -f "$pidf" ] || pidf="/tmp/watch_pr-${slug%%|*}-${slug##*|}.json.pid"
   watch="NOT RUNNING - relaunch it now as a Monitor from this conversation with timeout_ms 1800000, per handle-pr Phase 1"
   [ -n "${T3CODE_THREAD_ID:-}" ] \
     && watch="NOT RUNNING - start it again per handle-pr Phase 1 (In T3)"
