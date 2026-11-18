@@ -52,7 +52,7 @@ From now on every change goes through a PR (`shipshape:write-pr`), including you
 - Delete branches after merge, and allow updating a PR branch from the base.
 - Wiki and projects off.
 - The workflow token is read-only by default and cannot approve PRs.
-- Dependabot alerts and security updates are on, and `.github/dependabot.yml` updates GitHub Actions plus every ecosystem it finds, weekly and grouped.
+- Dependabot alerts and security updates are on, and `.github/dependabot.yml` updates GitHub Actions plus every ecosystem it finds, weekly, with minor and patch updates grouped per ecosystem and each major update in a PR of its own, so one breaking major cannot block the rest of its group.
 
 **Public kinds add:**
 - Auto-merge allowed.
