@@ -46,7 +46,7 @@ These are what the loop breaks without. A long run drifts far from this text, so
 
 1. Resolve the PR: `gh pr view <num> --repo <o>/<r> --json number,url,state,isDraft,headRefOid,reviewDecision,reviewRequests`. On a colleague's PR the user took over, add the user as assignee and keep the original: `gh pr edit <num> --repo <o>/<r> --add-assignee @me`.
 2. **Set the session goal** via `TaskCreate`: `Drive PR #<num> review cycle to clean`, marked `in_progress` immediately. This survives context compaction and stays open until Phase 5. A pushed round or a green CI is progress, not the goal.
-3. **Write the state file** `/tmp/handle-pr-<num>.json` (never inside the repo — it must survive compaction):
+3. **Write the state file** `~/.local/state/shipshape/handle-pr-<owner>-<repo>-<num>.json` (`$XDG_STATE_HOME/shipshape/` when that is set; create the directory with mode 700). Never put it inside the repo: it must survive compaction.
    ```json
    {"repo":"<o>/<r>","pr":<num>,"round":0,"lastReviewId":0,"nextGate":"launch the PR watch","status":"active",
     "fixed":[],"disputed":[],"deferred":[],"awaitingUser":[],

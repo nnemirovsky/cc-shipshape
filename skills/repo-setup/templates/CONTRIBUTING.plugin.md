@@ -10,7 +10,11 @@ Load the plugin from a working tree instead of through the marketplace:
 claude --plugin-dir /path/to/{{NAME}}
 ```
 
-Every Claude Code restart re-reads the plugin from disk, with no `/plugin install` and no marketplace cache to flush. Hooks load at session start, so a change to `hooks/hooks.json` or to a handler needs a restart before it takes effect.
+Every Claude Code restart re-reads the plugin from disk, with no `/plugin install` and no marketplace cache to flush. What needs a restart depends on the part you changed:
+
+- `plugin.json`, `hooks/hooks.json`, skills and commands load at session start: restart, or run `/reload-plugins`.
+- A hook's handler script runs from disk on every call, so an edit applies at once.
+- A function-hook module (a mod) reloads by itself when its files change.
 
 ## Tests
 

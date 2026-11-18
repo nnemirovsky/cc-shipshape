@@ -22,7 +22,9 @@
 #     when Monitor is unavailable: a Bash `run_in_background` command, which
 #     has no time cap and wakes the session once, when it exits.
 # The caller relaunches it after every exit that reaches it. The snapshot lives
-# in /tmp/watch_pr-<owner>-<repo>-<pr>.json (override with --state) and both
+# in <state dir>/watch_pr-<owner>-<repo>-<pr>.json (override with --state),
+# where the state dir is $HANDLE_PR_STATE_DIR, by default
+# ${XDG_STATE_HOME:-~/.local/state}/shipshape (mode 700), and both
 # modes read and write it, so a relaunch in either mode neither re-prints the
 # baseline nor misses what landed while no watch ran. Only a run with no
 # snapshot yet prints a baseline, and the baseline alone never ends --once.
@@ -77,7 +79,18 @@ if [ -z "$PR" ] || [ -z "$REPO" ]; then
   echo "$USAGE" >&2
   exit 2
 fi
-[ -n "$STATE_FILE" ] || STATE_FILE="/tmp/watch_pr-${REPO//\//-}-$PR.json"
+LEGACY_PID_FILE=""
+if [ -z "$STATE_FILE" ]; then
+  STATE_DIR="${HANDLE_PR_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/shipshape}"
+  mkdir -p "$STATE_DIR" && chmod 700 "$STATE_DIR"
+  STATE_FILE="$STATE_DIR/watch_pr-${REPO//\//-}-$PR.json"
+  # Older versions kept the snapshot in /tmp. Carry one over (only if it is
+  # ours), so the first run here prints no baseline, and treat a watch started
+  # by an older version as this PR's watch.
+  legacy="/tmp/watch_pr-${REPO//\//-}-$PR.json"
+  if [ ! -e "$STATE_FILE" ] && [ -O "$legacy" ]; then cp "$legacy" "$STATE_FILE"; fi
+  [ -O "$legacy.pid" ] && LEGACY_PID_FILE="$legacy.pid"
+fi
 PID_FILE="$STATE_FILE.pid"
 MODE=stream
 [ "$ONCE" = 1 ] && MODE=once
@@ -89,8 +102,10 @@ MODE=stream
 # stopped, and the stopped run can need a few seconds to exit. So a live pid
 # gets 20 s to go away before this run calls it a second watch.
 other_alive() { ps -p "$other_pid" -o args= 2>/dev/null | grep -q 'watch_pr\.sh'; }
-if [ -f "$PID_FILE" ]; then
-  read -r other_pid other_mode < "$PID_FILE" || true
+for pf in "$PID_FILE" $LEGACY_PID_FILE; do
+  [ -f "$pf" ] || continue
+  other_pid=""; other_mode=""
+  read -r other_pid other_mode < "$pf" || true
   if [ -n "${other_pid:-}" ] && [ "$other_pid" != "$$" ]; then
     waited=0
     while other_alive && [ "$waited" -lt 20 ]; do sleep 1; waited=$(( waited + 1 )); done
@@ -99,7 +114,7 @@ if [ -f "$PID_FILE" ]; then
       exit 3
     fi
   fi
-fi
+done
 echo "$$ $MODE" > "$PID_FILE"
 release_pid_file() {
   if [ -f "$PID_FILE" ] && [ "$(cut -d' ' -f1 "$PID_FILE" 2>/dev/null)" = "$$" ]; then
