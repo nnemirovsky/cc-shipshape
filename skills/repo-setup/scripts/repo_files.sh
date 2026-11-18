@@ -94,14 +94,16 @@ if [ "$public" = 1 ]; then
     || tpl .github/PULL_REQUEST_TEMPLATE.md .github/PULL_REQUEST_TEMPLATE.md
 fi
 
-# dependabot.yml: GitHub Actions plus every ecosystem found in the checkout.
+# dependabot.yml: GitHub Actions plus every ecosystem found in the checkout. Each
+# group takes minor and patch updates only: a major comes as its own PR, so one
+# breaking upgrade cannot hold every other update in its group back.
 if [ -e .github/dependabot.yml ] || [ -e .github/dependabot.yaml ]; then echo "EXISTS  .github/dependabot.yml"
 else
   {
     echo "version: 2"
     echo "updates:"
     eco() {  # eco <ecosystem> <directory>
-      printf '  - package-ecosystem: %s\n    directory: "%s"\n    schedule:\n      interval: weekly\n    groups:\n      %s:\n        patterns: ["*"]\n' "$1" "$2" "$1"
+      printf '  - package-ecosystem: %s\n    directory: "%s"\n    schedule:\n      interval: weekly\n    groups:\n      %s:\n        patterns: ["*"]\n        update-types: [minor, patch]\n' "$1" "$2" "$1"
     }
     eco github-actions /
     [ -f go.mod ] && eco gomod /
