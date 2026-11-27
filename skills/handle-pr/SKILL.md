@@ -92,7 +92,7 @@ In a T3 thread, with the t3-jobs plugin installed, none of the Monitor text abov
 3. **While it runs.** The job restarts itself 30 s after a crash and ends with `STOP`, so there is nothing to re-arm or relaunch. `$J status pr-…` shows its state, and the run-state hook shows `WATCH: running (t3-jobs job, pid …)`.
 4. **At the end (Phase 6).** When none of this thread's jobs is still running (`$J status`), delete the webhook task with `mcp__t3-code__delete_scheduled_task` and drop `t3WebhookTask` from the state file.
 
-The script drops bodies from its projection (control characters crash diffing) and filters self-authored events. It emits `REVIEWS`, `INLINE`, `ISSUE_COMMENTS`, `CHECKS`, `STATE`, and a synthetic `CLEANUP_SUGGESTED` after a non-first green CI on a new head. A background run's lines are in its output file; read that file when its notification arrives. Report the delta in one sentence. Do **not** fetch review bodies here — that is Phase 2's subagent's job.
+The script drops bodies from its projection (control characters crash diffing) and filters self-authored events. It emits `REVIEWS`, `INLINE`, `ISSUE_COMMENTS`, `CHECKS`, `STATE`, and a synthetic `CLEANUP_SUGGESTED` after a non-first green CI on a new head. An `INLINE` or `ISSUE_COMMENTS` line names `new=` ids and `edited=` ids: an edited comment counts, so a bot that edits its comment in place (a conflict report, a coverage summary) still wakes the session. A background run's lines are in its output file; read that file when its notification arrives. Report the delta in one sentence. Do **not** fetch review bodies here — that is Phase 2's subagent's job.
 
 ## Phase 2 — Triage the round (subagent)
 
