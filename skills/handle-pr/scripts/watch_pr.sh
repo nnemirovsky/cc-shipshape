@@ -194,14 +194,28 @@ emit_delta() {
     out "$REPO#$PR $ts $label baseline=$n latest=$latest"
     return 0
   fi
-  local new cnt
+  local new cnt edited ecnt line
   new=$(jq -cn --argjson cur "$cur" --argjson prev "$prev" \
     '($prev|map(.id)) as $p | $cur | map(select(.id as $i | ($p|index($i))|not))' 2>/dev/null)
   cnt=$(echo "$new" | jq 'length' 2>/dev/null)
-  if [ "${cnt:-0}" -gt 0 ]; then
-    out "$REPO#$PR $ts $label new=$new"
+  # An entry whose updated_at moved was edited. A snapshot written before the
+  # projection carried updated_at has none, and such an entry is not an edit.
+  edited=$(jq -cn --argjson cur "$cur" --argjson prev "$prev" \
+    '($prev|map({key: (.id|tostring), value: .updated_at})|from_entries) as $p
+     | $cur | map(select(.updated_at != null and ($p[.id|tostring] // null) != null
+                         and $p[.id|tostring] != .updated_at)) | map({id, user})' 2>/dev/null)
+  ecnt=$(echo "$edited" | jq 'length' 2>/dev/null)
+  line=""
+  [ "${cnt:-0}" -gt 0 ] && line="new=$new"
+  [ "${ecnt:-0}" -gt 0 ] && line="${line:+$line }edited=$edited"
+  if [ -n "$line" ]; then
+    out "$REPO#$PR $ts $label $line"
+  elif [ "$(jq -cn --argjson cur "$cur" --argjson prev "$prev" \
+      'all($prev[]; has("updated_at") | not) and ($prev|map(.id)) == ($cur|map(.id))' 2>/dev/null)" = true ]; then
+    # Only the projection gained updated_at since the snapshot: nothing happened.
+    return 0
   else
-    out "$REPO#$PR $ts $label changed (no new ids; resolved/edited/removed)"
+    out "$REPO#$PR $ts $label changed (no new or edited ids; resolved/removed)"
   fi
 }
 
@@ -222,7 +236,7 @@ while true; do
 
   if ! iids=$(
     gh api --paginate "repos/$REPO/pulls/$PR/comments" \
-      --jq ".[] | select(.user.login != \"$SELF_LOGIN\") | {id, user: .user.login, line, path}" 2>/dev/null \
+      --jq ".[] | select(.user.login != \"$SELF_LOGIN\") | {id, user: .user.login, line, path, updated_at}" 2>/dev/null \
       | jq -sc 'sort_by(.id)' 2>/dev/null
   ); then
     pause; continue
@@ -230,7 +244,7 @@ while true; do
 
   if ! cids=$(
     gh api --paginate "repos/$REPO/issues/$PR/comments" \
-      --jq ".[] | select(.user.login != \"$SELF_LOGIN\") | {id, user: .user.login}" 2>/dev/null \
+      --jq ".[] | select(.user.login != \"$SELF_LOGIN\") | {id, user: .user.login, updated_at}" 2>/dev/null \
       | jq -sc 'sort_by(.id)' 2>/dev/null
   ); then
     pause; continue
